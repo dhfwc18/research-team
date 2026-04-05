@@ -7,7 +7,8 @@ A multi-agent research team for designing and building complex modelling framewo
    - Project objective (one sentence minimum)
    - Which agents to involve (suggest from ## Agents below if unsure)
 3. Once confirmed, write the objective and active team into @.agents/orchestrator.md.
-4. Do not dispatch any agent until @.agents/orchestrator.md is fully populated.
+4. Read @agent-docs/agent-teams.md to understand how to build effective agent teams.
+5. Do not dispatch any agent until @.agents/orchestrator.md is fully populated.
 
 ## Tmux Layout
 If running inside a Tmux session, use split pane mode:
@@ -34,6 +35,39 @@ If the user explicitly requests staged delivery, typical stage patterns are:
 - Reporter may be called at the end of any stage, not just the final one.
 - Custom or combined stages are allowed at user discretion.
 
+## Agent Spawning
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 is set in .claude/settings.json to enable Claude Code
+to spawn subagents. This is required for the orchestrator to dispatch agents autonomously.
+
+## Permissions
+Agents may execute the following autonomously without prompting the user.
+Actual enforcement is via .claude/settings.json.
+
+All agents:
+- Read, Edit, Write, Glob within their designated directories
+- Bash: mkdir, ls, find, du, git status, git diff, git log, git add, git commit
+
+Researcher agents (literature, resource):
+- Bash: curl, wget, git clone (files under 50MB only)
+- WebSearch, WebFetch
+
+Analyst agents (code, data):
+- Bash: uv, ruff, rustfmt, pytest, markdownlint, static analysis tools
+
+Engineer agents (backend, frontend):
+- Bash: uv, cargo, ruff, rustfmt, clippy, npx, node, vitest, pytest, markdownlint
+
+QA engineer:
+- Bash: pytest, cargo test, vitest
+
+Always requires user approval (enforced via deny rules in .claude/settings.json):
+- git push
+- rm -rf
+- git reset --hard
+- git rebase
+- Any destructive database operation
+- Any download exceeding 50MB
+
 ## Models
 - Default model for all agents: claude-sonnet-4-6
 - Use claude-opus-4-6 only when the user explicitly requests complex or high-stakes output.
@@ -45,7 +79,8 @@ If the user explicitly requests staged delivery, typical stage patterns are:
 - Agents run in parallel workstreams where possible.
 - Each agent has read-only access to teammates' outputs.
 - Agents may request information from teammates via the orchestrator only.
-- Ask the user before deleting files, committing, or pushing to remote.
+- Ask the user before deleting files or pushing to remote. Commits are autonomous.
+- Never run git push, rm -rf, git reset --hard, or git rebase without explicit user approval.
 - If blocked, report to orchestrator. Do not proceed unilaterally.
 - Orchestrator and Reporter are mandatory in every team configuration.
 - No non-ASCII characters in any agent output or agent file.
@@ -96,6 +131,7 @@ Scope in parentheses where helpful, e.g. feat(model): or fix(api):
 - All agents may read from agent-findings/, agent-analysis/code/, and agent-analysis/data/ but only
   the designated agent writes to each subdirectory.
 - Reporter writes all outputs to agent-report/ (create if it does not exist).
+- agent-docs/ is read-only for all agents. It is a reference library, not a working directory.
 - No agent writes outside their designated directory.
 
 ## Output Format
