@@ -1,1 +1,6 @@
 agent-plan/
+
+# Large resources catalogued by curator (over 50MB).
+# Each excluded directory contains a setup.md with redownload instructions.
+# agent-catalogue/code/<large-repo>/
+# agent-catalogue/data/<large-dataset>/

@@ -2,21 +2,31 @@
 A multi-agent research team for designing and building complex modelling frameworks.
 
 ## Init
-1. Read @.agents/orchestrator.md first.
-2. If objective or active team are empty, prompt the user for:
+1. Check tmux is available: run tmux -V. If not found, stop and prompt the user to install tmux.
+2. Ensure teammateMode is set to tmux in ~/.claude.json. Set it if missing.
+3. Read @.agents/orchestrator.md first.
+4. If objective or active team are empty, prompt the user for:
    - Project objective (one sentence minimum)
    - Which agents to involve (suggest from ## Agents below if unsure)
-3. Once confirmed, write the objective and active team into @.agents/orchestrator.md.
-4. Read @agent-docs/agent-teams.md to understand how to build effective agent teams.
-5. Do not dispatch any agent until @.agents/orchestrator.md is fully populated.
+5. Once confirmed, write the objective and active team into @.agents/orchestrator.md.
+6. Read @agent-docs/agent-teams.md to understand how to build effective agent teams.
+7. Do not dispatch any agent until @.agents/orchestrator.md is fully populated.
 
 ## Tmux Layout
-If running inside a Tmux session, use split pane mode:
-- Left pane: orchestrator (persistent across all stages)
-- Right pane: split vertically per active agent in the current stage
-- Each agent gets its own pane labelled with its role name
-- Close agent panes when an agent completes its stage and is no longer active
-- Orchestrator pane stays open for the full session
+Split pane mode is strictly enforced. On init, set teammateMode to tmux in ~/.claude.json:
+
+  { "teammateMode": "tmux" }
+
+Or launch with: claude --teammate-mode tmux
+
+If tmux is not available, abort and prompt the user to install it before continuing.
+Do not fall back to in-process mode.
+
+Pane layout:
+- Left pane: orchestrator (persistent for the full session)
+- Right pane: split vertically, one pane per active agent
+- Each pane is labelled with the agent role name
+- Close agent panes when an agent completes and is no longer active
 
 ## Stages
 Staged execution is optional. By default the orchestrator follows the objective end-to-end
@@ -24,7 +34,7 @@ and dispatches all active agents as needed without requiring stage confirmation.
 
 If the user explicitly requests staged delivery, typical stage patterns are:
 
-  Research stage:   literature-researcher, resource-researcher, data-analyst, code-analyst
+  Research stage:   researcher, curator, data-analyst, code-analyst
   Design stage:     orchestrator reviews research outputs and writes implementation plan
   Build stage:      backend-engineer, frontend-engineer
   QA stage:         qa-engineer
@@ -47,9 +57,14 @@ All agents:
 - Read, Edit, Write, Glob within their designated directories
 - Bash: mkdir, ls, find, du, git status, git diff, git log, git add, git commit
 
-Researcher agents (literature, resource):
-- Bash: curl, wget, git clone (files under 50MB only)
+Researcher agent:
 - WebSearch, WebFetch
+- Bash: curl, wget (lightweight checks only, curator handles downloads)
+- Agent: spawn sub-agents for parallel domain research
+
+Curator agent:
+- WebFetch, WebSearch
+- Bash: curl, wget, git clone (files under 50MB only)
 
 Analyst agents (code, data):
 - Bash: uv, ruff, rustfmt, pytest, markdownlint, static analysis tools
@@ -92,6 +107,23 @@ Always requires user approval (enforced via deny rules in .claude/settings.json)
 - All other files: wrap naturally at 100 chars where appropriate
 - Do not use Python scripts to enforce line length. Write naturally and break at a sensible point.
 
+## Commit Cadence
+Agents commit independently and autonomously. Do not batch all work into a single commit at the end.
+
+Commit after each discrete, self-contained unit of work:
+- Researcher: after completing each findings file or summary
+- Curator: after cataloguing each resource and updating the index
+- Code analyst: after completing analysis of each file or module
+- Data analyst: after completing profiling and analysis of each dataset
+- Backend engineer: after each function, module, or feature is implemented and linted
+- Frontend engineer: after each component or interface unit is implemented and linted
+- QA engineer: after writing each test suite and after each test run result is recorded
+- Reporter: after each report is written
+
+Do not commit broken, partial, or unlinted work.
+Run linter before every commit. If linter fails, fix before committing.
+Use the commit convention and scope defined below for every commit.
+
 ## Commit Convention
 All engineer agents use standard conventional commits:
 - feat: new feature
@@ -124,12 +156,14 @@ Scope in parentheses where helpful, e.g. feat(model): or fix(api):
 - Plan file named after the objective, e.g. agent-plan/objective-name.md.
 - All agents and the user may read agent-plan/ at any time.
 - Orchestrator updates the plan if scope changes during execution.
-- Literature researcher writes to agent-findings/literature/ only.
-- Resource researcher writes to agent-findings/resource/ only.
+- Researcher writes to agent-findings/ only. No default subdirectories. Researcher may create
+  subdirectories at its own discretion for high-volume distinct topics.
+- Curator writes to agent-catalogue/code/ and agent-catalogue/data/ only. These directories are
+  exclusive to the curator. No other agent writes to agent-catalogue/.
 - Code analyst writes to agent-analysis/code/ only.
 - Data analyst writes to agent-analysis/data/ only.
-- All agents may read from agent-findings/, agent-analysis/code/, and agent-analysis/data/ but only
-  the designated agent writes to each subdirectory.
+- All agents may read from agent-findings/, agent-catalogue/, agent-analysis/code/, and
+  agent-analysis/data/ but only the designated agent writes to each directory.
 - Reporter writes all outputs to agent-report/ (create if it does not exist).
 - agent-docs/ is read-only for all agents. It is a reference library, not a working directory.
 - No agent writes outside their designated directory.
@@ -142,8 +176,8 @@ Every agent returns:
 
 ## Agents
 - @.agents/orchestrator.md
-- @.agents/literature-researcher.md
-- @.agents/resource-researcher.md
+- @.agents/researcher.md
+- @.agents/curator.md
 - @.agents/data-analyst.md
 - @.agents/code-analyst.md
 - @.agents/backend-engineer.md

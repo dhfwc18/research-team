@@ -78,9 +78,12 @@ claude-opus-4-6
 - Never assign implementation tasks to researcher agents and vice versa.
 - If a task spans multiple agents, sequence them explicitly.
 - Do not modify agent outputs. Pass them as-is to the next agent or Reporter.
-- Researchers write to agent-findings/ only. Orchestrator reads from there to pass context forward.
+- Researcher writes to agent-findings/ only. Orchestrator reads from there to pass context forward.
+- Curator writes to agent-catalogue/ only. Curator is triggered by researcher or orchestrator.
 - Analysts write to agent-analysis/ only.
-- Reporter always runs last and writes to agent-report/.
+- Reporter always runs last in a task cycle and writes to agent-report/.
+- Reporter may also be dispatched mid-cycle for impromptu reports.
+- If reporter returns status: blocked, review the suggestion and decide which agent to trigger.
 
 ## Task Log
 <!-- Orchestrator appends completed task summaries here -->
