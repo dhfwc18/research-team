@@ -1,0 +1,56 @@
+# CES model parameter ranges for Morris sensitivity screening
+# Sources: Papageorgiou et al. (2017), Boer et al. (2023 IMF WP/23/160), IEA WEO 2024
+
+parameters:
+  - name: sigma
+    group: substitution
+    min_value: 1.0    # near-Leontief lower bound
+    max_value: 3.0    # high substitutability upper bound
+    baseline: 1.8     # Papageorgiou et al. 2017, electricity sector
+
+  - name: alpha
+    group: substitution
+    min_value: 0.15   # low renewable share weight
+    max_value: 0.60   # high renewable share weight
+    baseline: 0.30    # calibrated to ~30% new capacity share (2024)
+
+  - name: oil_price_elasticity
+    group: elasticity
+    min_value: 0.05   # low end (global, per Papageorgiou)
+    max_value: 0.35   # high end (China-specific, Mukhtarov upper CI)
+    baseline: 0.16    # Mukhtarov et al. 2024 central estimate
+
+  - name: oil_price_2025
+    group: oil_price
+    min_value: 30.0   # NZE/demand-destruction floor
+    max_value: 110.0  # geopolitical shock ceiling
+    baseline: 75.0    # IEA STEPS 2025
+
+  - name: oil_price_2030
+    group: oil_price
+    min_value: 25.0   # Boer et al. 2023 severe demand scenario
+    max_value: 130.0  # IMF WP/23/160 supply disruption
+    baseline: 65.0    # IEA STEPS 2030
+
+  - name: discount_rate
+    group: finance
+    min_value: 0.05   # low cost of capital
+    max_value: 0.15   # high cost of capital (emerging markets premium)
+    baseline: 0.08    # global average WACC estimate
+
+  - name: renew_capex_decline
+    group: technology
+    min_value: 0.0    # no learning curve benefit
+    max_value: 0.50   # 50% cost decline by 2035 (aggressive Wright's law)
+    baseline: 0.20    # 20% cost decline, consistent with IEA projections
+
+  - name: invest_baseline_bn_usd
+    group: investment
+    min_value: 600.0  # downside from 2024 $807bn renewable base
+    max_value: 1200.0 # upside scenario
+    baseline: 807.0   # IEA/IRENA 2024 renewable power investment
+
+morris:
+  num_levels: 4
+  num_trajectories: 10
+  seed: 42
