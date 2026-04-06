@@ -92,12 +92,16 @@ def analyse_morris(
         seed=42,
     )
 
+    # When groups are used, SALib returns results per group, not per variable.
+    # Use si["names"] which contains the correct labels (group names if grouped).
+    result_names = list(si.get("names", problem["names"]))
+
     return SensitivityResult(
         problem=problem,
         mu=np.asarray(si["mu"]),
         mu_star=np.asarray(si["mu_star"]),
         sigma=np.asarray(si["sigma"]),
-        names=list(problem["names"]),
+        names=result_names,
     )
 
 
