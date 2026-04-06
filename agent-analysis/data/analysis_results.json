@@ -1,0 +1,39 @@
+{
+  "profiles": [
+    "Dataset: EIA Brent Monthly (May 1987-present)\n  Shape: 467 rows x 2 cols\n  Columns:\n    brent_usd_bbl                            Float64      nulls=0 (0.0%)  min=9.82, max=132.72, mean=51.01\n    date                                     Date         nulls=0 (0.0%)  range 1987-05-01 to 2026-03-01",
+    "Dataset: EIA Brent Daily (1986-2026)\n  Shape: 9862 rows x 2 cols\n  Columns:\n    brent_daily_usd_bbl                      Float64      nulls=0 (0.0%)  min=9.10, max=143.95, mean=50.94\n    date                                     Date         nulls=0 (0.0%)  range 1987-05-20 to 2026-03-30",
+    "Dataset: OWID Crude Oil Real Price (1861-2024)\n  Shape: 49 rows x 2 cols\n  Columns:\n    year                                     Int64        nulls=0 (0.0%)  min=1976.00, max=2024.00, mean=2000.00\n    oil_price_usd_bbl                        Float64      nulls=0 (0.0%)  min=79.98, max=702.38, mean=280.17",
+    "Dataset: IEA/IRENA Clean & Renewable Investment (2015-2024)\n  Shape: 10 rows x 5 cols\n  Columns:\n    year                                     Int64        nulls=0 (0.0%)  min=2015.00, max=2024.00, mean=2019.50\n    clean_energy_invest_bn_usd               Int64        nulls=0 (0.0%)  min=590.00, max=2100.00, mean=990.00\n    fossil_fuel_invest_bn_usd                Int64        nulls=0 (0.0%)  min=650.00, max=1050.00, mean=849.00\n    renewable_power_invest_bn_usd            Int64        nulls=0 (0.0%)  min=286.00, max=807.00, mean=413.90\n    clean_fossil_ratio                       Float64      nulls=0 (0.0%)  min=0.76, max=2.00, mean=1.13",
+    "Dataset: IEA GEC / NGFS Scenario Brent Paths (2020-2030)\n  Shape: 11 rows x 6 cols\n  Columns:\n    year                                     Int64        nulls=0 (0.0%)  min=2020.00, max=2030.00, mean=2025.00\n    brent_STEPS_usd_bbl                      Int64        nulls=0 (0.0%)  min=42.00, max=100.00, mean=71.91\n    brent_APS_usd_bbl                        Int64        nulls=0 (0.0%)  min=42.00, max=100.00, mean=67.91\n    brent_NZE_usd_bbl                        Int64        nulls=0 (0.0%)  min=42.00, max=100.00, mean=63.09\n    brent_HIGH_SHOCK_usd_bbl                 Int64        nulls=0 (0.0%)  min=42.00, max=130.00, mean=94.45\n    brent_LOW_SHOCK_usd_bbl                  Int64        nulls=0 (0.0%)  min=25.00, max=100.00, mean=57.64"
+  ],
+  "data_quality_issues": [],
+  "correlations_brent_vs_investment": {
+    "renewable_power_invest_bn_usd": 0.6625953420584899,
+    "clean_energy_invest_bn_usd": 0.6191654133315688,
+    "clean_fossil_ratio": 0.48253238566351764
+  },
+  "daily_log_return_stats": {
+    "mean_daily_log_return": 0.00019047396506480187,
+    "std_daily_log_return": 0.02524949908849147,
+    "annualised_vol_pct": 40.0823371902603,
+    "skewness": -1.6782271405071778,
+    "excess_kurtosis": 63.448173696697864,
+    "jarque_bera_pvalue": 0.0
+  },
+  "figure_paths": {
+    "brent_monthly": "figures/01_brent_monthly.png",
+    "owid_longrun": "figures/02_owid_longrun.png",
+    "investment_trends": "figures/03_investment_trends.png",
+    "correlation": "figures/04_correlation_scatter.png",
+    "scenarios": "figures/05_scenario_paths.png",
+    "log_returns": "figures/06_log_returns_volatility.png",
+    "combined_timeline": "figures/07_combined_timeline.png"
+  },
+  "datasets_fetched": {
+    "eia_brent_monthly": true,
+    "eia_brent_daily": true,
+    "owid_oil_165yr": true,
+    "investment_series": true,
+    "scenario_paths": true
+  }
+}
