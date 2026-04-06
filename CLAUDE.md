@@ -1,186 +1,86 @@
-# Research and Modelling Team
-A multi-agent research team for designing and building complex modelling frameworks.
+# CLAUDE.md
 
-## Init
-1. Check tmux is available: run tmux -V. If not found, stop and prompt the user to install tmux.
-2. Ensure teammateMode is set to tmux in ~/.claude.json. Set it if missing.
-3. Read @.agents/orchestrator.md first.
-4. If objective or active team are empty, prompt the user for:
-   - Project objective (one sentence minimum)
-   - Which agents to involve (suggest from ## Agents below if unsure)
-5. Once confirmed, write the objective and active team into @.agents/orchestrator.md.
-6. Read @agent-docs/agent-teams.md to understand how to build effective agent teams.
-7. Do not dispatch any agent until @.agents/orchestrator.md is fully populated.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Tmux Layout
-Split pane mode is strictly enforced. On init, set teammateMode to tmux in ~/.claude.json:
+## What This Is
 
-  { "teammateMode": "tmux" }
+A multi-agent research team framework. An orchestrator (Opus) coordinates specialized agents
+(Sonnet) that run as Claude Code teammates in tmux split panes. Agents research, catalogue,
+analyse, build, test, and report — each writing only to its designated directory.
 
-Or launch with: claude --teammate-mode tmux
+## Init Sequence
 
-If tmux is not available, abort and prompt the user to install it before continuing.
-Do not fall back to in-process mode.
+1. Verify tmux: `tmux -V` (abort if missing)
+2. Ensure `teammateMode: "tmux"` in `~/.claude.json`
+3. Read `.agents/orchestrator.md` — if Objective or Active Team is empty, prompt the user
+4. Read `agent-docs/agent-teams.md` for team coordination patterns
+5. Do not dispatch agents until orchestrator.md is fully populated
 
-Pane layout:
-- Left pane: orchestrator (persistent for the full session)
-- Right pane: split vertically, one pane per active agent
-- Each pane is labelled with the agent role name
-- Close agent panes when an agent completes and is no longer active
+Launch: `tmux new -s research && claude` (or `claude --teammate-mode tmux` for single-pane)
 
-## Stages
-Staged execution is optional. By default the orchestrator follows the objective end-to-end
-and dispatches all active agents as needed without requiring stage confirmation.
+## Architecture
 
-If the user explicitly requests staged delivery, typical stage patterns are:
+```
+Orchestrator (Opus) ──┬── Research: Researcher ←→ Curator
+                      ├── Analysis: Code Analyst, Data Analyst
+                      ├── Engineering: Backend ←→ Frontend ←→ QA
+                      └── Reporter (runs last every cycle)
+```
 
-  Research stage:   researcher, curator, data-analyst, code-analyst
-  Design stage:     orchestrator reviews research outputs and writes implementation plan
-  Build stage:      backend-engineer, frontend-engineer
-  QA stage:         qa-engineer
-  Report stage:     reporter
+All tasks route through the orchestrator. No agent modifies another's output directly.
+Agents communicate via the orchestrator only. Parallel workstreams where agents are independent.
 
-- The user may signal entering a new stage at any time. Orchestrator pauses, confirms the
-  new stage scope and active agents, then continues.
-- Reporter may be called at the end of any stage, not just the final one.
-- Custom or combined stages are allowed at user discretion.
+## Workspace Directories
 
-## Agent Spawning
-CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 is set in .claude/settings.json to enable Claude Code
-to spawn subagents. This is required for the orchestrator to dispatch agents autonomously.
+| Directory | Owner | Notes |
+|---|---|---|
+| `agent-plan/` | Orchestrator | Gitignored. Plan written before any dispatch. |
+| `agent-findings/` | Researcher | Subdirs at researcher discretion |
+| `agent-catalogue/code/`, `data/` | Curator | Exclusive to curator |
+| `agent-analysis/code/` | Code Analyst | |
+| `agent-analysis/data/` | Data Analyst | |
+| `schema/` | Backend Engineer | Read by Frontend and QA |
+| `agent-report/` | Reporter | Created if missing |
+| `agent-docs/` | Read-only | Reference library for all agents |
 
-## Permissions
-Agents may execute the following autonomously without prompting the user.
-Actual enforcement is via .claude/settings.json.
+No agent writes outside its designated directory.
 
-All agents:
-- Read, Edit, Write, Glob within their designated directories
-- Bash: mkdir, ls, find, du, git status, git diff, git log, git add, git commit
+## Agent Definitions
 
-Researcher agent:
-- WebSearch, WebFetch
-- Bash: curl, wget (lightweight checks only, curator handles downloads)
-- Agent: spawn sub-agents for parallel domain research
+All agent prompts live in `.agents/`. Each defines identity, model, tools, output directory,
+instructions, and constraints. Orchestrator and Reporter are mandatory in every team.
 
-Curator agent:
-- WebFetch, WebSearch
-- Bash: curl, wget, git clone (files under 50MB only)
+Default model: `claude-sonnet-4-6`. Orchestrator always uses `claude-opus-4-6`.
+Use Opus for other agents only when the user explicitly requests it.
 
-Analyst agents (code, data):
-- Bash: uv, ruff, rustfmt, pytest, markdownlint, static analysis tools
+## Key Rules
 
-Engineer agents (backend, frontend):
-- Bash: uv, cargo, ruff, rustfmt, clippy, npx, node, vitest, pytest, markdownlint
-
-QA engineer:
-- Bash: pytest, cargo test, vitest
-
-Always requires user approval (enforced via deny rules in .claude/settings.json):
-- git push
-- rm -rf
-- git reset --hard
-- git rebase
-- Any destructive database operation
-- Any download exceeding 50MB
-
-## Models
-- Default model for all agents: claude-sonnet-4-6
-- Use claude-opus-4-6 only when the user explicitly requests complex or high-stakes output.
-- Orchestrator always runs on claude-opus-4-6 as it is the central decision-maker.
-
-## Rules
-- All tasks route through the orchestrator.
-- No agent modifies another agent's output directly.
-- Agents run in parallel workstreams where possible.
-- Each agent has read-only access to teammates' outputs.
-- Agents may request information from teammates via the orchestrator only.
-- Ask the user before deleting files or pushing to remote. Commits are autonomous.
-- Never run git push, rm -rf, git reset --hard, or git rebase without explicit user approval.
-- If blocked, report to orchestrator. Do not proceed unilaterally.
-- Orchestrator and Reporter are mandatory in every team configuration.
-- No non-ASCII characters in any agent output or agent file.
+- Orchestrator writes implementation plan to `agent-plan/` before dispatching anything
+- Researcher passes links to Curator (does not download). If no Curator, logs sources only.
+- Backend produces `schema/` when Frontend is active. Frontend builds strictly from schema.
+- QA does not modify application code — reports failures to orchestrator for engineer dispatch.
+- Reporter returns `status: blocked` when facts are insufficient (never writes partial reports).
+- Downloads over 50MB require user approval and are always gitignored.
 
 ## Code Style
-- Python: max line length 88, linter Ruff
-- Rust: max line length 100, linter rustfmt
-- Markdown: max line length 100, linter markdownlint
-- All other files: wrap naturally at 100 chars where appropriate
-- Do not use Python scripts to enforce line length. Write naturally and break at a sensible point.
 
-## Commit Cadence
-Agents commit independently and autonomously. Do not batch all work into a single commit at the end.
-
-Commit after each discrete, self-contained unit of work:
-- Researcher: after completing each findings file or summary
-- Curator: after cataloguing each resource and updating the index
-- Code analyst: after completing analysis of each file or module
-- Data analyst: after completing profiling and analysis of each dataset
-- Backend engineer: after each function, module, or feature is implemented and linted
-- Frontend engineer: after each component or interface unit is implemented and linted
-- QA engineer: after writing each test suite and after each test run result is recorded
-- Reporter: after each report is written
-
-Do not commit broken, partial, or unlinted work.
-Run linter before every commit. If linter fails, fix before committing.
-Use the commit convention and scope defined below for every commit.
+- Python: line length 88, Ruff, type hints on all signatures, `uv` as package manager
+- Rust: line length 100, rustfmt, clippy must pass
+- Markdown: line length 100, markdownlint
+- No non-ASCII characters in any agent output
 
 ## Commit Convention
-All engineer agents use standard conventional commits:
-- feat: new feature
-- fix: bug fix
-- docs: documentation only
-- refactor: restructure without behaviour change
-- test: tests only
-- perf: performance improvement
-- chore: build, deps, tooling
-- ci: CI/CD config
-- style: formatting, linting, no logic change
-Scope in parentheses where helpful, e.g. feat(model): or fix(api):
 
-## Citations
-- All agents must cite every external source they use.
-- Code: reference file path and line range, or show full code block.
-- Quotes: include source and page number if available.
+Conventional commits required. Agents commit independently after each discrete unit of work.
+Lint before every commit. Never commit broken or partial work.
 
-## Repos
-- Backend and frontend each live in user-specified repos confirmed by orchestrator on init.
-- schema/ lives at project root and is written by backend, read by frontend and QA.
-- Backend produces schema/ whenever frontend-engineer is in the active team.
-- Frontend builds strictly from schema/. Never assumes backend internals.
-- QA reads both repos and schema/ but does not modify application code.
-- A project may contain backend only. Frontend is optional.
+Prefixes: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `perf:`, `chore:`, `ci:`, `style:`
+Scope in parentheses where helpful, e.g. `feat(model):`, `docs(findings):`
 
-## Workspace
-- Orchestrator writes an implementation plan to agent-plan/ before dispatching any task.
-- agent-plan/ is gitignored by default. It is a local working directory only.
-- Plan file named after the objective, e.g. agent-plan/objective-name.md.
-- All agents and the user may read agent-plan/ at any time.
-- Orchestrator updates the plan if scope changes during execution.
-- Researcher writes to agent-findings/ only. No default subdirectories. Researcher may create
-  subdirectories at its own discretion for high-volume distinct topics.
-- Curator writes to agent-catalogue/code/ and agent-catalogue/data/ only. These directories are
-  exclusive to the curator. No other agent writes to agent-catalogue/.
-- Code analyst writes to agent-analysis/code/ only.
-- Data analyst writes to agent-analysis/data/ only.
-- All agents may read from agent-findings/, agent-catalogue/, agent-analysis/code/, and
-  agent-analysis/data/ but only the designated agent writes to each directory.
-- Reporter writes all outputs to agent-report/ (create if it does not exist).
-- agent-docs/ is read-only for all agents. It is a reference library, not a working directory.
-- No agent writes outside their designated directory.
+## Permissions
 
-## Output Format
-Every agent returns:
-- status: done | blocked | needs_review
-- summary: what was done
-- next_agent: who should act next (if applicable)
+Pre-approved in `.claude/settings.json`: file ops, git (status/diff/log/add/commit), build
+tools (uv, cargo, ruff, rustfmt, clippy, pytest, vitest, npx, node), web access, curl/wget.
 
-## Agents
-- @.agents/orchestrator.md
-- @.agents/researcher.md
-- @.agents/curator.md
-- @.agents/data-analyst.md
-- @.agents/code-analyst.md
-- @.agents/backend-engineer.md
-- @.agents/frontend-engineer.md
-- @.agents/qa-engineer.md
-- @.agents/reporter.md
+Always requires user approval: `git push`, `rm -rf`, `git reset --hard`, `git rebase`,
+destructive database operations, downloads over 50MB.
