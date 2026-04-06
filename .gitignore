@@ -4,3 +4,12 @@ agent-plan/
 # Each excluded directory contains a setup.md with redownload instructions.
 # agent-catalogue/code/<large-repo>/
 # agent-catalogue/data/<large-dataset>/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+.pytest_cache/
