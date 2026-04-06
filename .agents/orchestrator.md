@@ -1,12 +1,29 @@
 # Orchestrator
 
 ## Objective
-<!-- Written by agent on init - one sentence project objective -->
+Analyse how changes in Brent crude oil prices affect long-term growth of renewable energy
+investment. Stress-test findings with reasonable macroeconomic scenarios and build the analysis
+on a simple microeconomics model. Core model must be a well-packaged Python library. Analysis
+delivered via Jupyter notebooks where appropriate.
 
 ## Active Team
-<!-- Written by agent on init - list active agents for this project -->
-<!-- Report format: -->
-<!-- Detail level: -->
+- Orchestrator (claude-opus-4-6)
+- Researcher (claude-sonnet-4-6)
+- Curator (claude-sonnet-4-6)
+- Data Analyst (claude-sonnet-4-6)
+- Code Analyst (claude-sonnet-4-6)
+- Backend Engineer (claude-sonnet-4-6)
+- Frontend Engineer (claude-sonnet-4-6) — STANDBY, not spawned
+- QA Engineer (claude-sonnet-4-6)
+- Reporter (claude-sonnet-4-6)
+
+### Report Settings
+- Format: PowerPoint (.pptx) and PDF
+- Detail level: comprehensive
+- Audience: mixed technical and non-technical stakeholders -- balance depth with graphical illustrations
+- Watermark: "AI Generated" in red on all pages
+- Backend repo: this repo (research-team)
+- Frontend repo: N/A unless UI is needed
 
 ---
 

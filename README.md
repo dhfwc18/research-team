@@ -1,155 +1,104 @@
-# Research and Modelling Team
+# Brent Crude Oil Price Impact on Renewable Energy Investment
 
-A multi-agent research team for designing and building complex modelling frameworks.
-Agents are coordinated by a central orchestrator and run in tmux split pane mode.
+An analysis of how changes in Brent crude oil prices affect long-term growth of renewable
+energy investment, built on a CES (Constant Elasticity of Substitution) microeconomic model
+with macroeconomic stress testing.
 
-## Workflow
+## Key Findings
 
-<p align="center">
-  <img src="./images/architecture-diagram.png" alt="Architecture overview" width="100%">
-</p>
+- A 1% rise in Brent crude oil prices is associated with a 0.16% increase in renewable energy
+  consumption (Mukhtarov et al. 2024)
+- CES substitution elasticity between fossil and renewable energy is 1.8 (Papageorgiou et al. 2017),
+  indicating strong substitutability
+- Under the Net Zero Emissions scenario ($44/bbl by 2030), renewable investment grows significantly
+  faster than under the baseline STEPS scenario ($65/bbl)
+- Brent price volatility is 40.1% annualised with fat tails (kurtosis 63.4), making GARCH modelling
+  appropriate for stress testing
+- Clean energy investment reached 2x fossil fuel investment in 2024
 
-<details>
-<summary>Flowchart view</summary>
+## Project Structure
 
-```mermaid
-%%{init: {'flowchart': {'defaultRenderer': 'elk'}}}%%
-flowchart TB
-    ORCH((Orchestrator))
+```
+src/ces_model/           Core Python library
+  core/                  CES substitution model and investment response
+  data/                  EIA Brent price loader and data cleaning
+  scenarios/             5 calibrated price paths and stress testing
+  sensitivity/           Morris global sensitivity analysis (SALib)
+  volatility/            GARCH(1,1) volatility modelling
 
-    subgraph RESEARCH[Research]
-        direction LR
-        RES[Researcher] -.- CUR[Curator]
-    end
+notebooks/               Jupyter notebooks with executed analysis
+  01_model_calibration   CES share curve, alpha calibration, elasticity validation
+  02_scenario_analysis   Investment trajectories, fan chart, policy multiplier
+  03_sensitivity         Morris GSA results, parameter importance
 
-    subgraph ANALYSIS[Analysis]
-        direction LR
-        CA[Code Analyst] -.- DA[Data Analyst]
-    end
+tests/                   100 unit tests + 64 integration tests (164/164 passing)
 
-    subgraph ENGINEERING[Engineering]
-        direction TB
-        BE[Backend] -.- FE[Frontend]
-        BE -.- QA[QA]
-        FE -.- QA
-    end
+agent-report/            Final deliverables
+  brent-renewables-report.pptx   23-slide presentation
+  brent-renewables-report.pdf    Landscape A4 document
+  generate_report.py             Rerunnable report generator
 
-    REP((Reporter))
-
-    ORCH --- RESEARCH
-    ORCH --- ANALYSIS
-    ORCH --- ENGINEERING
-    ORCH --- REP
-
-    RESEARCH -.- ANALYSIS
-    ANALYSIS -.- ENGINEERING
-    RESEARCH -.- REP
-    ANALYSIS -.- REP
-    ENGINEERING -.- REP
+agent-findings/          Research findings (59 sources across 4 topics)
+agent-catalogue/         Catalogued resources with metadata
+agent-analysis/          Data profiling, visualisations, and code analysis
 ```
 
-</details>
+## Model Overview
 
-## Workspace
+The core model uses a CES production function to capture substitution between fossil and
+renewable energy inputs:
 
-| Directory | Owner | Purpose |
+```
+s_renewable = alpha * p_fossil^(1 - sigma) / [alpha * p_fossil^(1 - sigma) + (1 - alpha) * p_renewable^(1 - sigma)]
+```
+
+Where sigma = 1.8 (substitution elasticity) and alpha is calibrated to a 30% renewable share
+at $80/bbl Brent crude. The investment response module translates share changes into investment
+trajectories, anchored to the empirical Mukhtarov elasticity.
+
+### Stress Scenarios
+
+| Scenario | 2030 Brent Price | Description |
 |---|---|---|
-| agent-plan/ | Orchestrator | Implementation plans (gitignored) |
-| agent-findings/ | Researcher | Research findings and source logs |
-| agent-catalogue/ | Curator | Fetched and catalogued resources |
-| agent-analysis/code/ | Code Analyst | Annotated code analysis |
-| agent-analysis/data/ | Data Analyst | Data profiling and analysis |
-| schema/ | Backend Engineer | API and data model schema |
-| agent-report/ | Reporter | Final reports and summaries |
-| agent-docs/ | Read-only | Reference documentation |
+| STEPS | $65/bbl | Stated Policies (baseline) |
+| APS | $55/bbl | Announced Pledges |
+| NZE | $44/bbl | Net Zero Emissions by 2050 |
+| HIGH_SHOCK | $130/bbl | Supply disruption / geopolitical shock |
+| LOW_SHOCK | $25/bbl | Demand collapse / oversupply |
 
-## Agents
-
-| Agent | Model | Role |
-|---|---|---|
-| Orchestrator | Opus 4.6 | Central coordinator and decision-maker |
-| Researcher | Sonnet | Finds and surfaces sources, spawns sub-agents |
-| Curator | Sonnet | Fetches, inspects and catalogues resources |
-| Code Analyst | Sonnet | Annotates and analyses source code |
-| Data Analyst | Sonnet | Profiles and analyses datasets |
-| Backend Engineer | Sonnet | Implements models, APIs, and backend systems |
-| Frontend Engineer | Sonnet | Implements user interfaces |
-| QA Engineer | Sonnet | Designs and runs integration tests |
-| Reporter | Sonnet | Produces reports and summaries |
-
-## Setup
-
-Requires tmux and Claude Code v2.1.32 or later.
-
-### 1. Install tmux
-
-tmux must be installed and available on PATH. Verify with:
+## Quick Start
 
 ```bash
-tmux -V
+# Install dependencies
+uv sync
+
+# Run the model
+uv run python -c "from ces_model.scenarios.stress_test import StressTest; print(StressTest().run())"
+
+# Run tests
+uv run pytest
+
+# Regenerate reports
+uv run python agent-report/generate_report.py
+
+# Launch notebooks
+uv run jupyter lab notebooks/
 ```
 
-**Warning:** Windows user will need to setup tmux in Windows Subsystem for Linux (WSL), then run it
-natively in WSL or reroute the tmux call back into PowerShell. (Just ask you AI agent to do it for
-you if this sounds too complicated). 
+## How This Was Built
 
-### 2. Enable agent teams
+This project was produced by a multi-agent research team coordinated through Claude Code agent
+teams in tmux split pane mode. Nine agents collaborated across five stages:
 
-Already configured in `.claude/settings.json` when you clone this repo:
+| Stage | Agents | Duration | Output |
+|---|---|---|---|
+| 1. Research | Researcher, Curator | ~35 min | 59 sources found and catalogued |
+| 2. Analysis | Data Analyst, Code Analyst | ~25 min | Dataset profiling, 7 figures, codebase review |
+| 3. Build | Backend Engineer | ~100 min | Python library, 3 notebooks, 100 unit tests |
+| 4. QA | QA Engineer | ~25 min | 64 integration tests, 164/164 passing |
+| 5. Report | Reporter | ~12 min | 23-slide PPTX + PDF with watermark |
+| **Total** | **8 agents dispatched** | **~3 hr 15 min** | **Full research-to-report pipeline** |
 
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
+## Licence
 
-### 3. Set split pane mode (persistent)
-
-Add `teammateMode` to your user config so every session uses split panes:
-
-```bash
-# Add to ~/.claude.json (create if it does not exist)
-cat ~/.claude.json | jq '. + {"teammateMode": "tmux"}' > tmp && mv tmp ~/.claude.json
-```
-
-Or manually add to `~/.claude.json`:
-
-```json
-{
-  "teammateMode": "tmux"
-}
-```
-
-### 4. Launch inside tmux
-
-You must start Claude Code from within a tmux session for split panes to work:
-
-```bash
-tmux new -s research
-claude
-```
-
-If you launch Claude Code outside of tmux, teammates will fall back to in-process mode (all in one
-pane) regardless of the `teammateMode` setting.
-
-The orchestrator init will verify both tmux availability and the config setting before dispatching
-any agents.
-
-<p align="center">
-  <img src="./images/split-pane.png" alt="Split pane mode with tmux" width="100%">
-</p>
-
-Alternatively, run this:
-
-```bash
-claude --teammate-mode tmux
-```
-
-for single-pane view. You can still switch to view different team members with `Shift` + `t` once
-the team members are spawned.
-
-<p align="center">
-  <img src="./images/one-pane.png" alt="Single pane mode with background agents" width="100%">
-</p>
+See [LICENSE](LICENSE).

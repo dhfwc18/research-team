@@ -3,7 +3,8 @@
     "allow": [
       "WebSearch",
       "Bash(xargs grep:*)",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(tmux:*)"
     ]
   }
 }
